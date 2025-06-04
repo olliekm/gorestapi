@@ -2,6 +2,7 @@ package user
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/olliekm/gorestapi/types"
 )
@@ -22,11 +23,20 @@ func (s *Store) GetUserByEmail(email string) (*types.User, error) {
 
 	u := new(types.User)
 	for rows.Next() {
-
+		u, err = scanRowIntoUser(rows)
+		if err != nil {
+			return nil, err
+		}
 	}
+
+	if u.ID == 0 {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	return u, nil
 }
 
-func scanRowIntoUser(rows *sql.Row) (*types.User, error) {
+func scanRowIntoUser(rows *sql.Rows) (*types.User, error) {
 	user := new(types.User)
 
 	err := rows.Scan(
