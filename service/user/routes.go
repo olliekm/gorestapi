@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/olliekm/gorestapi/types"
+	"github.com/olliekm/gorestapi/utils"
 )
 
 type Handler struct {
@@ -19,10 +21,18 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 }
 
-func (h *Handler) handleLogin(w http.ResponseWriter, req *http.Request) {
+func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *Handler) handleRegister(w http.ResponseWriter, req *http.Request) {
+func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
+	// get JSON payload
+	var payload types.RegisterUserPayload
+	if err := utils.ParseJSON(r, payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+	}
 
+	// check if user exists already in db
+
+	// if not create a new user
 }
