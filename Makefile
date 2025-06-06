@@ -7,6 +7,11 @@ test:
 run: build
 	@./bin/gorestapi
 
-migrate:
-	@migrate create ext- sql -dir $(filter-out $@, $(MAKECMDGOALS))
+migration:
+	@migrate create -ext sql -dir cmd/migrate/migrations -seq $(filter-out $@,$(MAKECMDGOALS))
 
+migrate-down:
+	@go run cmd/migrate/main.go down
+
+migrate-up:
+	@go run cmd/migrate/main.go up
