@@ -41,9 +41,13 @@ func main() {
 
 	cmd := os.Args[(len(os.Args) - 1)]
 	if cmd == "up" {
-
+		if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+			log.Fatal(err)
+		}
 	}
 	if cmd == "down" {
-
+		if err := m.Down(); err != nil && err != migrate.ErrNoChange {
+			log.Fatal(err)
+		}
 	}
 }

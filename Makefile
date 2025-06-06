@@ -6,3 +6,7 @@ test:
 
 run: build
 	@./bin/gorestapi
+
+migrate:
+	@migrate create ext- sql -dir $(filter-out $@, $(MAKECMDGOALS))
+
