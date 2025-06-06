@@ -4,15 +4,16 @@ import (
 	"log"
 	"os"
 
-	mysqlCFG "github.com/go-sql-driver/mysql"
+	mysqlDriver "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/mysql"
+	mysqlMigrate "github.com/golang-migrate/migrate/v4/database/mysql"
+	_ "github.com/golang-migrate/migrate/v4/source/file" // Import the file source driver
 	"github.com/olliekm/gorestapi/config"
 	"github.com/olliekm/gorestapi/db"
 )
 
 func main() {
-	db, err := db.NewMySQLStorage(mysqlCFG.Config{
+	cfg := mysqlDriver.Config{
 		User:                 config.Envs.DBUser,
 		Passwd:               config.Envs.DBPassword,
 		Addr:                 config.Envs.DBAdress,
@@ -20,12 +21,13 @@ func main() {
 		Net:                  "tcp",
 		AllowNativePasswords: true,
 		ParseTime:            true,
-	})
+	}
+	db, err := db.NewMySQLStorage(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	driver, err := mysql.WithInstance(db, &mysql.Config{})
+	driver, err := mysqlMigrate.WithInstance(db, &mysqlMigrate.Config{})
 	if err != nil {
 		log.Fatal(err)
 	}
