@@ -1,0 +1,7 @@
+REST API:
+    - Finish create routes
+        - Test each route properly
+    - Look over code for proper styling
+    - Add more robust error handling
+    - Dockerize project
+    
