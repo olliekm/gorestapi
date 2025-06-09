@@ -1,7 +1,11 @@
 REST API:
-    - Finish create routes
+    - Finish create routes 
         - Test each route properly
     - Look over code for proper styling
     - Add more robust error handling
     - Dockerize project
-    
+    ✔ Add authentication with JWT @done(25-06-09 15:21)
+    - add types for orders
+    - Implement create user
+    - Implement get user by id
+    - add ordering logic
