@@ -8,11 +8,20 @@ type UserStore interface {
 	CreateUser(User) error
 }
 
-// type mockUserStore struct {
-// }
+// TODO: Add limit to number of products returned
+type ProductStore interface {
+	GetProducts() ([]Product, error)
+}
 
-func GetUserByEmail(email string) (*User, error) {
-	return nil, nil
+// TODO: implement quantity in a better way, avoid race condition... should be atomic
+type Product struct {
+	ID          int       `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	ImageURL    string    `json:"imageUrl"`
+	Price       float64   `json:"price"`
+	Quantity    int       `json:"quantity"`
+	CreatedAt   time.Time `json:"createdAt"`
 }
 
 type User struct {
@@ -22,6 +31,13 @@ type User struct {
 	Email     string    `json:"email"`
 	Password  string    `json:"-"`
 	CreatedAt time.Time `json:"createdAt"`
+}
+
+// type mockUserStore struct {
+// }
+
+func GetUserByEmail(email string) (*User, error) {
+	return nil, nil
 }
 
 type LoginUserPayload struct {
