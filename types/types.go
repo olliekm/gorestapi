@@ -12,6 +12,30 @@ type UserStore interface {
 type ProductStore interface {
 	GetProducts() ([]*Product, error)
 	CreateProduct(ProductPayload) error
+	GetProductsByIDs(ps []int) ([]Product, error)
+}
+
+type OrderStore interface {
+	CreateOrder(Order) (int, error)
+	CreateOrderItem(OrderItem) error
+}
+
+type Order struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"userID"`
+	Total     float64   `json:"total"`
+	Status    string    `json:"status"`
+	Address   string    `json:"address"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+type OrderItem struct {
+	ID        int       `json:"id"`
+	OrderID   int       `json:"orderID"`
+	ProductID int       `json:"productID"`
+	Quantity  int       `json:"quantity"`
+	Price     float64   `json:"price"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 // TODO: implement quantity in a better way, avoid race condition... should be atomic
@@ -33,9 +57,6 @@ type User struct {
 	Password  string    `json:"-"`
 	CreatedAt time.Time `json:"createdAt"`
 }
-
-// type mockUserStore struct {
-// }
 
 func GetUserByEmail(email string) (*User, error) {
 	return nil, nil
@@ -59,4 +80,13 @@ type ProductPayload struct {
 	ImageURL    string  `json:"imageUrl"`
 	Price       float64 `json:"price"`
 	Quantity    int     `json:"quantity"`
+}
+
+type CartItem struct {
+	ProductID int `json:"productId" validate:"required"`
+	Quantity  int `json:"quantity" validate:"required,min=1"`
+}
+
+type CartCheckoutPayload struct {
+	Items []CartItem `json:"items" validate:"required"`
 }

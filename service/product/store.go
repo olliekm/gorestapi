@@ -3,6 +3,7 @@ package product
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/olliekm/gorestapi/types"
 )
@@ -56,9 +57,37 @@ func scanRowIntoProduct(row *sql.Rows) (*types.Product, error) {
 func (s *Store) CreateProduct(product types.ProductPayload) error {
 	_, err := s.db.Exec("INSERT INTO products (name, description, image, price, quantity) VALUES (?, ?, ?, ?, ?)", product.Name, product.Description, product.ImageURL, product.Price, product.Quantity)
 	if err != nil {
-		fmt.Print("Error inserting product: ", err)
 		return err
 	}
 
 	return nil
+}
+
+func (s *Store) GetProductsByIDs(productIDs []int) ([]types.Product, error) {
+	if len(productIDs) == 0 {
+		return nil, nil // No products to fetch
+	}
+	placeholders := strings.Repeat("?,", len(productIDs)-1)
+	query := fmt.Sprintf("SELECT * FROM products WHERE id IN (%s)", placeholders)
+	args := make([]interface{}, len(productIDs))
+	for i, id := range productIDs {
+		args[i] = id
+	}
+
+	rows, err := s.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	products := []types.Product{}
+	for rows.Next() {
+		p, err := scanRowIntoProduct(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		products = append(products, *p)
+	}
+
+	return products, nil
 }
