@@ -2,6 +2,7 @@ package product
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/olliekm/gorestapi/types"
 )
@@ -14,20 +15,22 @@ func NewStore(db *sql.DB) *Store {
 	return &Store{db: db}
 }
 
-func (s *Store) GetProducts(id int) ([]types.Product, error) {
+func (s *Store) GetProducts() ([]*types.Product, error) {
 	rows, err := s.db.Query("SELECT * FROM products")
 	if err != nil {
 		return nil, err
 	}
 
-	products := make([]types.Product, 0)
+	products := make([]*types.Product, 0)
 	for rows.Next() {
 		p, err := scanRowIntoProduct(rows)
 		if err != nil {
 			return nil, err
 		}
-		products = append(products, *p)
+
+		products = append(products, p)
 	}
+
 	return products, nil
 }
 
@@ -48,4 +51,14 @@ func scanRowIntoProduct(row *sql.Rows) (*types.Product, error) {
 	}
 
 	return product, nil
+}
+
+func (s *Store) CreateProduct(product types.ProductPayload) error {
+	_, err := s.db.Exec("INSERT INTO products (name, description, image, price, quantity) VALUES (?, ?, ?, ?, ?)", product.Name, product.Description, product.ImageURL, product.Price, product.Quantity)
+	if err != nil {
+		fmt.Print("Error inserting product: ", err)
+		return err
+	}
+
+	return nil
 }

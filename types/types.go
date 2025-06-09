@@ -10,7 +10,8 @@ type UserStore interface {
 
 // TODO: Add limit to number of products returned
 type ProductStore interface {
-	GetProducts() ([]Product, error)
+	GetProducts() ([]*Product, error)
+	CreateProduct(ProductPayload) error
 }
 
 // TODO: implement quantity in a better way, avoid race condition... should be atomic
@@ -50,4 +51,12 @@ type RegisterUserPayload struct {
 	LastName  string `json:"lastName" validate:"required"`
 	Email     string `json:"email" validate:"required,email"`
 	Password  string `json:"password" validate:"required,min=3,max=130"`
+}
+
+type ProductPayload struct {
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	ImageURL    string  `json:"imageUrl"`
+	Price       float64 `json:"price"`
+	Quantity    int     `json:"quantity"`
 }
