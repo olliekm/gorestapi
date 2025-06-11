@@ -35,10 +35,10 @@ func (s *Store) GetProducts() ([]*types.Product, error) {
 	return products, nil
 }
 
-func scanRowIntoProduct(row *sql.Rows) (*types.Product, error) {
+func scanRowIntoProduct(rows *sql.Rows) (*types.Product, error) {
 	product := new(types.Product)
 
-	err := row.Scan(
+	err := rows.Scan(
 		&product.ID,
 		&product.Name,
 		&product.Description,
@@ -64,14 +64,13 @@ func (s *Store) CreateProduct(product types.ProductPayload) error {
 }
 
 func (s *Store) GetProductsByIDs(productIDs []int) ([]types.Product, error) {
-	if len(productIDs) == 0 {
-		return nil, nil // No products to fetch
-	}
-	placeholders := strings.Repeat("?,", len(productIDs)-1)
-	query := fmt.Sprintf("SELECT * FROM products WHERE id IN (%s)", placeholders)
+	placeholders := strings.Repeat(",?", len(productIDs)-1)
+	query := fmt.Sprintf("SELECT * FROM products WHERE id IN (?%s)", placeholders)
+
+	// Convert productIDs to []interface{}
 	args := make([]interface{}, len(productIDs))
-	for i, id := range productIDs {
-		args[i] = id
+	for i, v := range productIDs {
+		args[i] = v
 	}
 
 	rows, err := s.db.Query(query, args...)
@@ -93,6 +92,7 @@ func (s *Store) GetProductsByIDs(productIDs []int) ([]types.Product, error) {
 }
 
 func (s *Store) UpdateProductStock(product types.Product) error {
+	fmt.Print("Updating product stock: ", product.ID, "\n")
 	_, err := s.db.Exec("UPDATE products SET name = ?, price = ?, image = ?, description = ?, quantity = ? WHERE id = ?", product.Name, product.Price, product.ImageURL, product.Description, product.Quantity, product.ID)
 	if err != nil {
 		return err

@@ -18,47 +18,46 @@ func getCartIDs(cartItems []types.CartItem) ([]int, error) {
 	return productIDs, nil
 }
 
-func (h *Handler) createOder(ps []types.Product, items []types.CartItem, userID int) (int, float64, error) {
-	productMap := make(map[int]types.Product)
-	for _, p := range ps {
-		productMap[p.ID] = p
+func (h *Handler) createOder(products []types.Product, cartItems []types.CartItem, userID int) (int, float64, error) {
+	// create a map of products for easier access
+	productsMap := make(map[int]types.Product)
+	for _, product := range products {
+		productsMap[product.ID] = product
 	}
 
-	// Check that all products are available
-	if err := checkProductAvailability(items, productMap); err != nil {
-		return 0, 0, nil
+	// check if all products are available
+	if err := checkProductAvailability(cartItems, productsMap); err != nil {
+		return 0, 0, err
 	}
 
-	// Calculate total price
-	totalPrice := calculateTotalPrice(items, productMap)
+	// calculate total price
+	totalPrice := calculateTotalPrice(cartItems, productsMap)
 
-	// TODO: Atomize
-	// Reduce stock for each product
-	for _, item := range items {
-		product := productMap[item.ProductID]
+	// reduce the quantity of products in the store
+	for _, item := range cartItems {
+		product := productsMap[item.ProductID]
 		product.Quantity -= item.Quantity
-
 		h.productStore.UpdateProductStock(product)
 	}
 
-	// Create order
+	// create order record
 	orderID, err := h.orderStore.CreateOrder(types.Order{
 		UserID:  userID,
 		Total:   totalPrice,
 		Status:  "pending",
-		Address: "Default Address", // This should be replaced with actual address handling
+		Address: "some address", // could fetch address from a user addresses table
 	})
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to create order: %w", err)
+		return 0, 0, err
 	}
 
-	// Create order items
-	for _, item := range items {
+	// create order the items records
+	for _, item := range cartItems {
 		h.orderStore.CreateOrderItem(types.OrderItem{
 			OrderID:   orderID,
 			ProductID: item.ProductID,
 			Quantity:  item.Quantity,
-			Price:     productMap[item.ProductID].Price,
+			Price:     productsMap[item.ProductID].Price,
 		})
 	}
 
