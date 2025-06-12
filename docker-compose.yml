@@ -15,11 +15,8 @@ services:
       - "3306:3306"
 
   migrate:
-    platform: linux/arm64
     build: 
       context: .
-      args:
-        TARGETARCH: arm64
     image: gorestapi-migrate:latest
     env_file:
       - .env
@@ -38,11 +35,8 @@ services:
         exec ./migrate
 
   api:
-    platform: linux/arm64
     build: 
       context: .
-      args: 
-        TARGETARCH: arm64
     image: gorestapi-api:latest
     ports:
       - "8080:8080"
