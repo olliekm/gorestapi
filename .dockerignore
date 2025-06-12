@@ -1,0 +1,10 @@
+# ignore Git and editor cruft
+.git
+*.md
+
+# local env and logs
+.env
+*.log
+
+# build artifacts
+bin/

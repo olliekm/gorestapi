@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE:   ${DB_NAME}
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  migrate:
+    platform: linux/arm64
+    build: 
+      context: .
+      args:
+        TARGETARCH: arm64
+    image: gorestapi-migrate:latest
+    env_file:
+      - .env
+    depends_on:
+      - db
+    # override the default ENTRYPOINT for migrations
+    entrypoint:
+      - sh
+      - -c
+      - |
+        # wait for mysql to accept connections
+        until nc -z $DB_HOST $DB_PORT; do
+          echo "⏳ waiting for db…"
+          sleep 1
+        done
+        exec ./migrate
+
+  api:
+    platform: linux/arm64
+    build: 
+      context: .
+      args: 
+        TARGETARCH: arm64
+    image: gorestapi-api:latest
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - migrate
+
+volumes:
+  db_data:
