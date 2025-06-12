@@ -12,23 +12,40 @@ services:
     ports: [ "3306:3306" ]
 
   migrate:
+    image: gorestapi:latest    # same image as api
     build: .
     env_file: [ .env ]
-    depends_on: [ db ]
-    # wait for the DB, then run migrations
+    environment:
+      - MIGRATIONS_PATH=/app/cmd/migrate/migrations
+    depends_on:
+      - db
+    working_dir: /app
     entrypoint:
       - sh
       - -c
       - |
+        echo "⏳ waiting for db..."
         until nc -z $DB_HOST $DB_PORT; do sleep 1; done
-        exec migrate
+        echo "🗄️ applying migrations..."
+        migrate up
 
   api:
+    image: gorestapi:latest
     build: .
     env_file: [ .env ]
-    depends_on: [ db, migrate ]
+    depends_on:
+      - db
+      - migrate
     ports: [ "8080:8080" ]
-    # uses ENTRYPOINT ["api"]
+    working_dir: /app
+    entrypoint:
+      - sh
+      - -c
+      - |
+        echo "⏳ waiting for db..."
+        until nc -z $DB_HOST $DB_PORT; do sleep 1; done
+        echo "✅ starting API"
+        api
 
 volumes:
   db_data:

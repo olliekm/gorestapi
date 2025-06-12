@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -33,11 +34,12 @@ func main() {
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://cmd/migrate/migrations",
+		"file://"+config.Envs.MigrateSource,
 		"mysql",
 		driver,
 	)
 	if err != nil {
+		fmt.Println("Error creating migration instance:")
 		log.Fatal(err)
 	}
 
