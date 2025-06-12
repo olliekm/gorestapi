@@ -1,38 +1,30 @@
+# ── BUILDER: force Go to cross-compile for linux/arm64 ───────
 FROM golang:1.23-alpine AS builder
-
 WORKDIR /app
 
-
-# cache deps
 COPY go.mod go.sum ./
 RUN go mod download
 
-# copy source
 COPY . .
 
+# override Go’s target to exactly linux/arm64
+ENV CGO_ENABLED=0 \
+    GOOS=linux   \
+    GOARCH=arm64
 
-# build the API server
-RUN go build -o api   ./cmd/api
+RUN go build -ldflags="-s -w" -o api     ./cmd/api
+RUN go build -ldflags="-s -w" -o migrate ./cmd/migrate
 
-
-# build the migration runner
-RUN go build -o migrate ./cmd/migrate
-
-
-FROM alpine:latest
+# ── RUNTIME: minimal Alpine ─────────────────────────────────
+FROM alpine:3.18
 RUN apk --no-cache add ca-certificates
 
-WORKDIR /root
-# pull in your two binaries
-COPY --from=builder /app/api     .
-COPY --from=builder /app/migrate .
-# and your migrations so migrate can find them
-COPY --from=builder /app/cmd/migrate/migrations ./cmd/migrate/migrations
+COPY --from=builder /app/api     /usr/local/bin/api
+COPY --from=builder /app/migrate /usr/local/bin/migrate
+COPY --from=builder /app/cmd/migrate/migrations /migrations
 
-RUN chmod +x ./api ./migrate
-# expose your API port
+RUN chmod +x /usr/local/bin/api /usr/local/bin/migrate
+
+WORKDIR /
 EXPOSE 8080
-
-# default entrypoint is your API server;
-# we’ll override this in compose for migrations
-ENTRYPOINT ["./api"]
+ENTRYPOINT ["api"]
