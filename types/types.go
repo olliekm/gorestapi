@@ -1,6 +1,9 @@
 package types
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 type UserStore interface {
 	GetUserByEmail(email string) (*User, error)
@@ -10,7 +13,7 @@ type UserStore interface {
 
 // TODO: Add limit to number of products returned
 type ProductStore interface {
-	GetProducts() ([]*Product, error)
+	GetProducts(ctx context.Context) ([]*Product, error)
 	CreateProduct(ProductPayload) error
 	GetProductsByIDs(ps []int) ([]Product, error)
 	UpdateProductStock(product Product) error

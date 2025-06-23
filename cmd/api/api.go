@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
 	"github.com/olliekm/gorestapi/service/cart"
 	"github.com/olliekm/gorestapi/service/order"
@@ -34,7 +35,15 @@ func (s *APIServer) Run() error {
 	userHandler.RegisterRoutes(subrouter)
 
 	// Register product service routes
-	productStore := product.NewStore(s.db)
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     "redis:6379", // Adjust as needed
+		Password: "",
+		DB:       0, // Use default DB
+	})
+	if err := redisClient.Ping(redisClient.Context()).Err(); err != nil {
+		log.Fatal("Failed to connect to Redis:", err)
+	}
+	productStore := product.NewStore(s.db, redisClient)
 	productHandler := product.NewHandler(productStore)
 	productHandler.RegisterRoutes(subrouter)
 

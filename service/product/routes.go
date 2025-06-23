@@ -24,7 +24,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 
 func (h *Handler) handleGetProducts(w http.ResponseWriter, r *http.Request) {
 	// get products from store
-	products, err := h.store.GetProducts() // Assuming 0 means no specific product ID filter
+	products, err := h.store.GetProducts(r.Context()) // Assuming 0 means no specific product ID filter
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return

@@ -1,22 +1,42 @@
 package product
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/olliekm/gorestapi/types"
 )
 
 type Store struct {
-	db *sql.DB
+	db          *sql.DB
+	redisClient *redis.Client
+	cacheTTL    time.Duration
 }
 
-func NewStore(db *sql.DB) *Store {
-	return &Store{db: db}
+func NewStore(db *sql.DB, redisClient *redis.Client) *Store {
+	return &Store{
+		db:          db,
+		redisClient: redisClient,
+		cacheTTL:    5 * time.Minute, // Set cache TTL to 5 minutes
+	}
 }
 
-func (s *Store) GetProducts() ([]*types.Product, error) {
+func (s *Store) GetProducts(ctx context.Context) ([]*types.Product, error) {
+	// Chaching
+	const cacheKey = "products:all"
+
+	if data, err := s.redisClient.Get(ctx, cacheKey).Bytes(); err == nil {
+		// If data is found in Redis cache, unmarshal it into products
+		var products []*types.Product
+		if err := json.Unmarshal(data, &products); err != nil {
+			return products, nil
+		}
+	}
 	rows, err := s.db.Query("SELECT * FROM products")
 	if err != nil {
 		return nil, err
@@ -30,6 +50,10 @@ func (s *Store) GetProducts() ([]*types.Product, error) {
 		}
 
 		products = append(products, p)
+	}
+	// 3) Marshal & set cache (best effort)
+	if data, err := json.Marshal(products); err == nil {
+		s.redisClient.Set(ctx, cacheKey, data, s.cacheTTL)
 	}
 
 	return products, nil
